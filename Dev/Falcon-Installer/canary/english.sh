@@ -65,27 +65,31 @@ case "$DISTRO" in
 			REPO="https://crowdstrike-installer-newest.s3-eu-west-1.amazonaws.com/latest/falcon-sensor_ubuntu_latest.deb"
 			FALCON="falcon-sensor_ubuntu_latest.deb"
 		else
-			echo -e "\n${RED}[ERROR]${DEFAULT}   | Versão $PRETTY não é compatível"
+			echo -e "\n${RED}[ERROR]${DEFAULT}   | Version $PRETTY is not compatible"
 			exit
 		fi
 	;;
 	"\"Amazon Linux"\")
-		echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY é compatível"
+		echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY is compatible"
 		OS="Amazon Linux"
 		REPO="https://crowdstrike-installer-newest.s3-eu-west-1.amazonaws.com/latest/falcon-sensor-amzn2_latest.rpm"
 		FALCON="falcon-sensor-amzn2_latest.rpm"
 	;;
 	"\"Linux Mint"\")
-		echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY é compatível"
+		echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY is compatible"
 		OS="Ubuntu"
 		REPO="https://crowdstrike-installer-newest.s3-eu-west-1.amazonaws.com/latest/falcon-sensor_ubuntu_latest.deb"
 		FALCON="falcon-sensor_ubuntu_latest.deb"
 	;;
 	"\"Fedora Linux"\")
-		echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY é compatível"
+		echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY is compatible"
 		OS="Fedora"
 		REPO="https://crowdstrike-installer-newest.s3.eu-west-1.amazonaws.com/latest/falcon-sensor-el9_latest.rpm"
 		FALCON="falcon-sensor-el9_latest.rpm"
+	;;
+	*)
+		echo -e "\n${RED}[ERROR]${DEFAULT}   | $PRETTY is not compatible"
+		exit
 	;;
 esac
 
@@ -181,7 +185,7 @@ fi
 # Configuring Falcon-sensor and starting the service
 echo -e "${BLUE}[Running]${DEFAULT} | Configuring Falcon..."
 sleep 3
-/opt/CrowdStrike/falconctl -s -f --cid=441023A549B648B39FDA947FE5A34803-8B
+/opt/CrowdStrike/falconctl -s -f --cid=
 echo -e "${GREEN}[OK]${DEFAULT}      | Falcon configured"
 sleep 2
 
@@ -214,7 +218,8 @@ sleep 5 # Increase this value if you have a really slow machine or poor connecti
 
 case "$OS" in # Doesn't matter if its a error or not, an entry on erros.log will be added, deal with it
 	"Ubuntu"|"Fedora")
-		SENSOR=$(sudo service falcon-sensor status | grep "active (running)" | cut -c 6-29)
+		#SENSOR=$(sudo service falcon-sensor status | grep "active (running)" | cut -c 6-29)
+		SENSOR=$(sudo service falcon-sensor status | grep -F "Active: active (running)")
 		SERVICE=$(sudo service falcon-sensor status > erros.log)
 	;;
 	"Amazon Linux")
@@ -248,3 +253,4 @@ rm erros.log 2> /dev/null
 rm -rf /tmp/Repo 2> /dev/null
 sleep 2
 echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | CrowdStrike Falcon-Sensor installed successfully. See ya =)"
+
