@@ -1,0 +1,44 @@
+<<lol
+case "$OS" in
+	"Ubuntu")
+		SENSOR=$(sudo service falcon-sensor status | grep "active (running)" | cut -c 4-27)
+		case "$SENSOR" in
+			"Active: active (running)")
+				echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Serviço do Falcon-Sensor iniciou com sucesso"
+			;;
+			*)
+				read -p $'\e[31m[ERROR]\e[0m   | Alguma coisa deu errado, quer checar o erros.log? [s/N]: ' input
+				case "$input" in
+					[sS])
+						sudo service falcon-sensor > erros.log
+						cat erros.log
+					;;
+				esac
+				echo -e "\n${RED}[ERROR]${DEFAULT}   | Resolva o problema antes de executar novamente o script"
+    			echo -e "${RED}[ERROR]${DEFAULT}   | Instalação Abortada"
+				exit 1
+			;;
+		esac
+	;;
+	"Amazon Linux")
+		SENSOR=$(sudo /bin/systemctl status falcon-sensor.service | grep "active (running)" | cut -c 4-27)
+		case "$SENSOR" in
+			"Active: active (running)")
+				echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Serviço do Falcon-Sensor iniciou com sucesso"
+			;;
+			*)
+				read -p $'\e[31m[ERROR]\e[0m   | Alguma coisa deu errado, quer checar o erros.log? [s/N]: ' input
+				case "$input" in
+					[sS])
+						sudo /bin/systemctl status falcon-sensor.service > erros.log
+						cat erros.log
+					;;
+				esac
+				echo -e "\n${RED}[ERROR]${DEFAULT}   | Resolva o problema antes de executar novamente o script"
+    			echo -e "${RED}[ERROR]${DEFAULT}   | Instalação Abortada"
+				exit 1
+			;;
+		esac
+	;;
+esac
+lol
