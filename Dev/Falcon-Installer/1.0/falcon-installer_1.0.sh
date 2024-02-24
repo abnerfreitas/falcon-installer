@@ -100,34 +100,38 @@ if [ -f "$ctl" ] || [ -f "$falcaoservice" ]; then
 	while [ -f "$ctl" ] || [ -f "$falcaoservice" ]; do
 		echo -e "\n"
 		read -p $'\e[33m[Warning]\e[0m | Falcon is already installed. You wanna reinstall? [y/N]: ' input
-		if [[ "$input" = "y" || "$input" = "Y" ]]; then
-			echo -e "${YELLOW}[Warning]${DEFAULT} | Removing previous install...\n"
-			case "$OS" in
-				"Ubuntu")
-					sudo apt purge falcon-sensor -y 2> erros.log
-				;;
-				"Amazon Linux"|"Fedora")
-					sudo yum remove falcon-sensor -y 2> erros.log
-					sleep 5
-				;;
-			esac
-			
-			if [ -s erros.log ]; then
-				read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
-				if [[ "$input" = "y" || "$input" = "Y" ]]; then
-					echo -e "\n"
-					cat erros.log
-					echo -e "\n"
+		case $input in
+			[yY])
+				echo -e "${YELLOW}[Warning]${DEFAULT} | Removing previous install...\n"
+				case "$OS" in
+					"Ubuntu")
+						sudo apt purge falcon-sensor -y 2> erros.log
+					;;
+					"Amazon Linux"|"Fedora")
+						sudo yum remove falcon-sensor -y 2> erros.log
+						sleep 5
+					;;
+				esac
+				if [ -s erros.log ]; then
+					read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+					case $input in
+						[yY])
+							echo -e "\n"
+							cat erros.log
+							echo -e "\n"
+						;;
+					esac
+					echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
+					exit 1
 				fi
-				echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
+				echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon removed"
+				sleep 3
+			;;
+			*)
+				echo -e "\n${GREEN}[OK]${DEFAULT}      | Aborted Install"
 				exit 1
-			fi
-			echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon removed"
-			sleep 3
-		else
-			echo -e "\n${GREEN}[OK]${DEFAULT}      | Aborted Install"
-			exit 1
-		fi
+			;;
+		esac
 	done
 else
 	echo -e "${GREEN}[OK]${DEFAULT}      | Falcon was not installed"
@@ -136,13 +140,15 @@ fi
 # Downloading "falcon"
 echo -e "${BLUE}[Running]${DEFAULT} | Downloading Falcon. Please wait...\n"
 wget -c "$REPO" -P /tmp/Repo
-if [ ! "$?" == "0" ]; then
-	echo -e "\n${RED}[ERROR]${DEFAULT}   | Download failed"
-	sleep 1
-	echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
-	echo -e "Aborted Install"
-	exit 1
-fi
+case $? in
+	"1")
+		echo -e "\n${RED}[ERROR]${DEFAULT}   | Download failed"
+		sleep 1
+		echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
+		echo -e "Aborted Install"
+		exit 1
+	;;
+esac
 
 # Checking if falcon.* is downloaded and beginning install
 if ! [ -f /tmp/Repo/"$FALCON" ]; then
@@ -153,33 +159,38 @@ if ! [ -f /tmp/Repo/"$FALCON" ]; then
 else
 	echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Download completed"
 	echo -e ""
-	read -p $'\e[32m[OK]\e[0m      | Everything seems fine, wanna install? [y/N]: ' input
+	read -p $'\e[32m[OK]\e[0m      | Everything seems fine, wanna install? [Y/n]: ' input
 	echo -e "\n"
-	if ! [[ "$input" = "y" || "$input" = "Y" ]]; then
-		echo -e "${GREEN}[OK]${DEFAULT}      | Aborted Install"
-		exit 1
-	else
-		case $OS in
-			"Ubuntu")
-				apt install /tmp/Repo/"$FALCON" -y 2> erros.log
-			;;
-			"Amazon Linux"|"Fedora")
-				yum install /tmp/Repo/"$FALCON" -y 2> erros.log
-			;;
-		esac
-		if [ -s erros.log ]; then
-			read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
-			if [[ "$input" = "y" || "$input" = "Y" ]]; then
-				echo -e "\n"
-				cat erros.log
-				echo -e "\n"
-			fi
-			echo -e "${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
-			echo -e "\n${RED}[ERROR]${DEFAULT}   | Aborted Install"
+	case $input in
+		[nN])
+			echo -e "${GREEN}[OK]${DEFAULT}      | Aborted Install"
 			exit 1
-		fi
-		echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon installed\n"
-	fi
+		;;
+		*)
+			case $OS in
+				"Ubuntu")
+					apt install /tmp/Repo/"$FALCON" -y 2> erros.log
+				;;
+				"Amazon Linux"|"Fedora")
+					yum install /tmp/Repo/"$FALCON" -y 2> erros.log
+				;;
+			esac
+			if [ -s erros.log ]; then
+				read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+				case $input in
+					[yY])
+						echo -e "\n"
+						cat erros.log
+						echo -e "\n"
+					;;
+				esac
+				echo -e "${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
+				echo -e "\n${RED}[ERROR]${DEFAULT}   | Aborted Install"
+				exit 1
+			fi
+			echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon installed\n"
+		;;
+	esac
 fi
 
 # Configuring Falcon-sensor and starting the service
@@ -202,11 +213,13 @@ case "$OS" in
 esac
 if [ -s erros.log ]; then
 	read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
-    if [[ "$input" = "y" || "$input" = "Y" ]]; then
-		echo -e "\n"
-		cat erros.log
-		echo -e "\n"
-    fi
+    case $input in
+		[yY])
+			echo -e "\n"
+			cat erros.log
+			echo -e "\n"
+		;;
+    esac
 	echo -e "${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
     echo -e "\n${RED}[ERROR]${DEFAULT}   | Aborted Install"
     exit 1
@@ -217,11 +230,19 @@ sleep 5 # Increase this value if you have a really slow machine or poor connecti
 # Checking status
 
 SERVICE=$(sudo /bin/systemctl status falcon-sensor.service > erros.log)
+RFM=$($ctl -g --rfm-state)
 SENSOR=$(sudo /bin/systemctl status falcon-sensor.service | grep "ConnectToCloud successful")
 
 case $? in
 	"0")
-		echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon service started successfully"
+		case "$RFM" in
+			"rfm-state=true.") #FORÇANDO FALSO-POSITIVO TROCAR PRA TRUE PLS DPS 
+				echo -e "\n${YELLOW}[Warning]${DEFAULT} | CAREFUL! THIS SERVICE IS RUNNING AS RFM! PROCEED AT YOUR OWN RISK!"
+				echo -e "\n${YELLOW}[Warning]${DEFAULT} | REINSTALLING USUALLY SOLVES THIS ISSUE, IF NOT, REACH CROWDSTRIKE'S SUPPORT"
+				sleep 3
+			;;
+		esac
+		echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon service started successfully"	
 	;;
 	*)
 		eval $SERVICE
@@ -236,7 +257,7 @@ case $? in
 		exit 1
 	;;
 esac
-echo -e "\n${YELLOW}[Warning]${DEFAULT} | Check this hostname ($maq_hostname) on CrowdStrike"
+echo -e "\n${YELLOW}[Warning]${DEFAULT} | Check this hostname ($maq_hostname) on CrowdStrike Console"
 sleep 2
 
 # Cleaning everything up
