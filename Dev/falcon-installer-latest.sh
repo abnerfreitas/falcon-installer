@@ -196,7 +196,7 @@ fi
 # Configuring Falcon-sensor and starting the service
 echo -e "${BLUE}[Running]${DEFAULT} | Configuring Falcon..."
 sleep 3
-/opt/CrowdStrike/falconctl -s -f --cid=441023A549B648B39FDA947FE5A34803-8B
+/opt/CrowdStrike/falconctl -s -f --cid=
 echo -e "${GREEN}[OK]${DEFAULT}      | Falcon configured"
 sleep 2
 
@@ -236,7 +236,7 @@ SENSOR=$(sudo /bin/systemctl status falcon-sensor.service | grep "ConnectToCloud
 case $? in
 	"0")
 		case "$RFM" in
-			"rfm-state=true.") #FORÇANDO FALSO-POSITIVO TROCAR PRA TRUE PLS DPS 
+			"rfm-state=true.")
 				echo -e "\n${YELLOW}[Warning]${DEFAULT} | CAREFUL! THIS SERVICE IS RUNNING AS RFM! PROCEED AT YOUR OWN RISK!"
 				echo -e "\n${YELLOW}[Warning]${DEFAULT} | REINSTALLING USUALLY SOLVES THIS ISSUE, IF NOT, REACH CROWDSTRIKE'S SUPPORT"
 				sleep 3

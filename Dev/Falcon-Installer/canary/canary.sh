@@ -31,7 +31,7 @@ echo -e "
 	     ██████████████████████████████████████████████████
 	     ███████████████Falcon - Installer 1.2█████████████"
 
-sleep 4
+#sleep 4
 clear
 
 # Cleaning up...
@@ -55,6 +55,53 @@ GREEN="\e[32m"
 YELLOW="\e[33m"
 DEFAULT="\e[0m"
 
+# Define a function to display the help message.
+function show_param() {
+  echo "Usage: sudo $0 --cid [CID] [OPTIONS]"
+  echo ""
+  echo "Options:"
+  echo "  -h, --help      Display this help message and exit."
+  echo "  -c, --cid		  Defines Falcon's CID"
+  echo "  -s, --silent    Run the script with no output (Don't use with -y)"
+  echo "  -y, --all-yes   Choose yes for everything (Don't use with -s)"
+  echo ""
+}
+
+# Parse the command-line arguments.
+#if [ -z "$1" ] || [ "$1" != "-c" ]; then
+#	echo "You need to set the CID (-c, --cid)"
+#	show_param
+#	exit 1
+#fi 
+while [[ $# -ne 0 ]]; do
+	param="$1"
+	case "$param" in
+    	-h|--help)
+			show_param
+			exit 0
+    	;;
+		-c|--cid)
+			CID="$2"
+			echo "CID is $CID"
+			shift
+		;;
+		-l|--lulz)
+			lulz_set=true
+			echo "LOL get rekt"
+		;;
+		*)
+				echo "Invalid argument: $1"
+				show_param
+				exit 1
+		;;
+	esac
+	shift
+done
+
+echo "$1"
+if [[ -n "$LULZ" ]]; then
+	echo "$LULZ"
+fi
 ########################################### Installer ########################################### 
 
 case "$DISTRO" in
@@ -196,7 +243,7 @@ fi
 # Configuring Falcon-sensor and starting the service
 echo -e "${BLUE}[Running]${DEFAULT} | Configuring Falcon..."
 sleep 3
-/opt/CrowdStrike/falconctl -s -f --cid=441023A549B648B39FDA947FE5A34803-8B
+/opt/CrowdStrike/falconctl -s -f --cid=
 echo -e "${GREEN}[OK]${DEFAULT}      | Falcon configured"
 sleep 2
 
@@ -236,7 +283,7 @@ SENSOR=$(sudo /bin/systemctl status falcon-sensor.service | grep "ConnectToCloud
 case $? in
 	"0")
 		case "$RFM" in
-			"rfm-state=true.") #FORÇANDO FALSO-POSITIVO TROCAR PRA TRUE PLS DPS 
+			"rfm-state=true.")
 				echo -e "\n${YELLOW}[Warning]${DEFAULT} | CAREFUL! THIS SERVICE IS RUNNING AS RFM! PROCEED AT YOUR OWN RISK!"
 				echo -e "\n${YELLOW}[Warning]${DEFAULT} | REINSTALLING USUALLY SOLVES THIS ISSUE, IF NOT, REACH CROWDSTRIKE'S SUPPORT"
 				sleep 3
