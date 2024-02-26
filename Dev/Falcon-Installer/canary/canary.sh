@@ -69,19 +69,26 @@ function show_param() {
 }
 
 error_log() {
-					if [ -s erros.log ]; then
-					read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
-					case $input in
-						[yY])
-							echo -e "\n"
-							cat erros.log
-							echo -e "\n"
-						;;
-					esac
-					echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before running this script again"
-					exit 1
-				fi
-}
+	if [ -s erros.log ]; then
+		read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+		case $input in
+			[yY])
+				echo -e "\n"
+				cat erros.log
+				echo -e "\n"
+			;;
+		esac
+		echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before running this script again"
+		exit 1
+	fi }
+
+function cid_validation(){
+	if [[ ${CID:0:1} = "-" || ! ${CID} =~ ^[A-Z0-9-]+$ || ${CID:(-1)} = "-" || ! ${CID:(-3)} =~ -..$ ]]; then
+    	echo "Error: CID only can contain Uppercase Letters, Numbers and \"-\"."
+    	exit 1
+	else
+    	echo "CID is $CID"
+	fi }
 
 case $1 in
 	-c|--cid)
@@ -90,6 +97,8 @@ case $1 in
 		if [[ $CID == "" ]]; then
 			show_param
 			exit 1
+		else
+			cid_validation
 		fi
 	;;
 esac
@@ -102,14 +111,8 @@ while [[ $# -ne 0 ]]; do
 			exit 0
     	;;
 		-c|--cid)
-#           if [[ $CID == "" ]]; then
             CID="$2"
-            if [[ ${CID:0:1} = "-" || ! ${CID} =~ ^[A-Z0-9-]+$ || ${CID:(-1)} = "-" || ! ${CID:(-3)} =~ -..$ ]]; then
-                echo "Error: CID only can contain Uppercase Letters, Numbers and \"-\"."
-                exit 1
-            else
-                echo "CID is $CID"
-            fi
+            cid_validation
             shift
         ;;
 		-l|--lulz)
@@ -296,8 +299,8 @@ if [ -s erros.log ]; then
     echo -e "\n${RED}[ERROR]${DEFAULT}   | Aborted Install"
     exit 1
 fi
-echo -e "${BLUE}[Running]${DEFAULT} | Waiting 5s to confirm server handshake..."
-sleep 5 # Increase this value if you have a really slow machine or poor connection
+echo -e "${BLUE}[Running]${DEFAULT} | Waiting 15s to confirm server handshake..."
+sleep 15 # Increase this value if you have a really slow machine or poor connection
 
 # Checking status
 
