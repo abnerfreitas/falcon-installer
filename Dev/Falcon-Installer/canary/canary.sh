@@ -47,6 +47,7 @@ maq_hostname=$(cat /proc/sys/kernel/hostname)
 DISTRO=$(grep '^NAME' /etc/os-release | cut -c 6-100)
 VERSION=$(grep '^VERSION=' /etc/os-release | cut -c 10-11)
 PRETTY=$(grep '^PRETTY_NAME' /etc/os-release | cut -c 13-100)
+CID="441023A549B648B39FDA947FE5A34803-8B"
 
 # Pretty colors :)
 RED="\e[31m"
@@ -67,12 +68,32 @@ function show_param() {
   echo ""
 }
 
-# Parse the command-line arguments.
-#if [ -z "$1" ] || [ "$1" != "-c" ]; then
-#	echo "You need to set the CID (-c, --cid)"
-#	show_param
-#	exit 1
-#fi 
+error_log() {
+					if [ -s erros.log ]; then
+					read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+					case $input in
+						[yY])
+							echo -e "\n"
+							cat erros.log
+							echo -e "\n"
+						;;
+					esac
+					echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before running this script again"
+					exit 1
+				fi
+}
+
+case $1 in
+	-c|--cid)
+	;;
+	*)
+		if [[ $CID == "" ]]; then
+			show_param
+			exit 1
+		fi
+	;;
+esac
+
 while [[ $# -ne 0 ]]; do
 	param="$1"
 	case "$param" in
@@ -81,27 +102,29 @@ while [[ $# -ne 0 ]]; do
 			exit 0
     	;;
 		-c|--cid)
-			CID="$2"
-			echo "CID is $CID"
-			shift
-		;;
+#           if [[ $CID == "" ]]; then
+            CID="$2"
+            if [[ ${CID:0:1} = "-" || ! ${CID} =~ ^[A-Z0-9-]+$ || ${CID:(-1)} = "-" || ! ${CID:(-3)} =~ -..$ ]]; then
+                echo "Error: CID only can contain Uppercase Letters, Numbers and \"-\"."
+                exit 1
+            else
+                echo "CID is $CID"
+            fi
+            shift
+        ;;
 		-l|--lulz)
 			lulz_set=true
 			echo "LOL get rekt"
 		;;
 		*)
-				echo "Invalid argument: $1"
-				show_param
-				exit 1
+			echo "Invalid argument: $1"
+			show_param
+			exit 1
 		;;
 	esac
 	shift
 done
 
-echo "$1"
-if [[ -n "$LULZ" ]]; then
-	echo "$LULZ"
-fi
 ########################################### Installer ########################################### 
 
 case "$DISTRO" in
@@ -242,8 +265,10 @@ fi
 
 # Configuring Falcon-sensor and starting the service
 echo -e "${BLUE}[Running]${DEFAULT} | Configuring Falcon..."
-sleep 3
-/opt/CrowdStrike/falconctl -s -f --cid=
+/opt/CrowdStrike/falconctl -s -f --cid=$CID 2> erros.log
+
+error_log
+
 echo -e "${GREEN}[OK]${DEFAULT}      | Falcon configured"
 sleep 2
 
