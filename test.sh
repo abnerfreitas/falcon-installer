@@ -20,6 +20,7 @@ function loading_icon() {
     done
     printf " \b\n"
 }
+echo "Minha contribuicao P4ginasabertas"
 
 touch erros2.log
 # Set the timeout
