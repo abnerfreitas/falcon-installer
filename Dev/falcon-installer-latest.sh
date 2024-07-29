@@ -265,4 +265,4 @@ echo -e "${GREEN}[OK]${DEFAULT}      | Cleaning..."
 rm erros.log 2> /dev/null
 rm -rf /tmp/Repo 2> /dev/null
 sleep 2
-echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | CrowdStrike Falcon-Sensor installed successfully. See ya =)"
+echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | CrowdStrike Falcon-Sensor installed successfully. p4ginasabertas"
