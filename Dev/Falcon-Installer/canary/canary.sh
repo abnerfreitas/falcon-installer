@@ -37,8 +37,8 @@ clear
 # Cleaning up...
 rm -rf /tmp/Repo
 mkdir /tmp/Repo
-rm erros.log 2> /dev/null
-touch erros.log
+rm error.log 2> /dev/null
+touch error.log
 
 # Variables =D
 ctl=/opt/CrowdStrike/falconctl
@@ -70,16 +70,16 @@ function show_param() {
 }
 
 function service_stats() {
-	sudo /bin/systemctl status falcon-sensor.service > erros.log
+	sudo /bin/systemctl status falcon-sensor.service > error.log
 }
 
 error_log() {
-	if [ -s erros.log ]; then
-		read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+	if [ -s error.log ]; then
+		read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check error.log? [y/N]: ' input
 		case $input in
 			[yY])
 				echo -e "\n"
-				cat erros.log
+				cat error.log
 				echo -e "\n"
 			;;
 		esac
@@ -188,19 +188,19 @@ if [ -f "$ctl" ] || [ -f "$falcaoservice" ]; then
 				echo -e "${YELLOW}[Warning]${DEFAULT} | Removing previous install...\n"
 				case "$OS" in
 					"Ubuntu")
-						sudo apt purge falcon-sensor -y 2> erros.log
+						sudo apt purge falcon-sensor -y 2> error.log
 					;;
 					"Amazon Linux"|"Fedora")
-						sudo yum remove falcon-sensor -y 2> erros.log
+						sudo yum remove falcon-sensor -y 2> error.log
 						sleep 5
 					;;
 				esac
-				if [ -s erros.log ]; then
-					read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+				if [ -s error.log ]; then
+					read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check error.log? [y/N]: ' input
 					case $input in
 						[yY])
 							echo -e "\n"
-							cat erros.log
+							cat error.log
 							echo -e "\n"
 						;;
 					esac
@@ -252,18 +252,18 @@ else
 		*)
 			case $OS in
 				"Ubuntu")
-					apt update && apt install /tmp/Repo/"$FALCON" -y 2> erros.log
+					apt update && apt install /tmp/Repo/"$FALCON" -y 2> error.log
 				;;
 				"Amazon Linux"|"Fedora")
-					yum install /tmp/Repo/"$FALCON" -y 2> erros.log
+					yum install /tmp/Repo/"$FALCON" -y 2> error.log
 				;;
 			esac
-			if [ -s erros.log ]; then
-				read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+			if [ -s error.log ]; then
+				read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check error.log? [y/N]: ' input
 				case $input in
 					[yY])
 						echo -e "\n"
-						cat erros.log
+						cat error.log
 						echo -e "\n"
 					;;
 				esac
@@ -278,7 +278,7 @@ fi
 
 # Configuring Falcon-sensor and starting the service
 echo -e "${BLUE}[Running]${DEFAULT} | Configuring Falcon..."
-/opt/CrowdStrike/falconctl -s -f --cid=$CID 2> erros.log
+/opt/CrowdStrike/falconctl -s -f --cid=$CID 2> error.log
 
 error_log
 
@@ -290,18 +290,18 @@ echo -e "${BLUE}[Running]${DEFAULT} | Starting falcon-sensor.service..."
 sleep 3
 case "$OS" in
 	"Ubuntu")
-		service falcon-sensor start 2> erros.log
+		service falcon-sensor start 2> error.log
 	;;
 	"Amazon Linux"|"Fedora")
-		sudo /bin/systemctl start falcon-sensor.service 2> erros.log
+		sudo /bin/systemctl start falcon-sensor.service 2> error.log
 	;;
 esac
-if [ -s erros.log ]; then
-	read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
+if [ -s error.log ]; then
+	read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check error.log? [y/N]: ' input
     case $input in
 		[yY])
 			echo -e "\n"
-			cat erros.log
+			cat error.log
 			echo -e "\n"
 		;;
     esac
@@ -313,21 +313,20 @@ echo -e "${BLUE}[Running]${DEFAULT} | Confirming cloud handshake. Please wait...
 
 # Checking status
 
-SERVICE=$(sudo /bin/systemctl status falcon-sensor.service > erros.log)
+SERVICE=$(sudo /bin/systemctl status falcon-sensor.service > error.log)
 RFM=$($ctl -g --rfm-state)
 timeout=60
 start=$(date +%s)
 
-# Loop until the timeout is reached or the handshake is acknowledge
+# Loop until the timeout is reached or the handshake is acknowledged
 while true; do
 	now=$(date +%s)
 	elapsed=$((now - start))
 	if [[ $elapsed -ge $timeout ]]; then
 		error_log
 	fi
-	# Check for the word in the file
 	service_stats
-	if (grep -q "ConnectToCloud successful" erros.log); then
+	if (grep -q "ConnectToCloud successful" error.log); then
 		break
 	fi
 done
@@ -348,7 +347,7 @@ sleep 2
 
 # Cleaning everything up
 echo -e "${GREEN}[OK]${DEFAULT}      | Cleaning..."
-rm erros.log 2> /dev/null
+rm error.log 2> /dev/null
 rm -rf /tmp/Repo 2> /dev/null
 sleep 2
-echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | CrowdStrike Falcon-Sensor installed successfully. See ya =)"
+echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | CrowdStrike Falcon-Sensor installed successfully."
