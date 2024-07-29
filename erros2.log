@@ -1,0 +1,25 @@
+● falcon-sensor.service - CrowdStrike Falcon Sensor
+     Loaded: loaded (/usr/lib/systemd/system/falcon-sensor.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2024-07-26 11:11:29 UTC; 16s ago
+    Process: 50428 ExecStartPre=/opt/CrowdStrike/falconctl -g --cid (code=exited, status=0/SUCCESS)
+    Process: 50429 ExecStart=/opt/CrowdStrike/falcond (code=exited, status=0/SUCCESS)
+   Main PID: 50431 (falcond)
+      Tasks: 42 (limit: 4549)
+     Memory: 179.0M (peak: 300.2M)
+        CPU: 5.350s
+     CGroup: /system.slice/falcon-sensor.service
+             ├─50431 /opt/CrowdStrike/falcond
+             ├─50432 falcon-sensor-bpf
+             ├─50786 /opt/CrowdStrike/falcon-fx --log-level 0
+             └─50787 /opt/CrowdStrike/falcon-predict --log-level 0
+
+Jul 26 11:11:44 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): Connected directly to ts01-b.cloudsink.net:443
+Jul 26 11:11:44 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): ValidateCertificate: Certificate verified!
+Jul 26 11:11:44 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): SSLSocket connected successfully to ts01-b.cloudsink.net:443
+Jul 26 11:11:44 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): sock/ssl/proxy cnctd ok. First send to cloud.
+Jul 26 11:11:44 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): CLOUDPROTO_ESTABLISHED. AgentId has changed.
+Jul 26 11:11:44 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): ConnectToCloud successful.
+Jul 26 11:11:45 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): SslConnect: lfodown01-b.cloudsink.net:443
+Jul 26 11:11:45 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): SslConnect: Unable to connect to lfodown01-b.cloudsink.net:443 via Application Proxy: c0000225
+Jul 26 11:11:45 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): trying to connect to lfodown01-b.cloudsink.net:443
+Jul 26 11:11:45 ubuntu-server falcon-sensor-bpf[50432]: CrowdStrike(4): Connected directly to lfodown01-b.cloudsink.net:443

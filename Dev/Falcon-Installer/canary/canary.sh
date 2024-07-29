@@ -47,6 +47,7 @@ maq_hostname=$(cat /proc/sys/kernel/hostname)
 DISTRO=$(grep '^NAME' /etc/os-release | cut -c 6-100)
 VERSION=$(grep '^VERSION=' /etc/os-release | cut -c 10-11)
 PRETTY=$(grep '^PRETTY_NAME' /etc/os-release | cut -c 13-100)
+ARCH=$(uname -m)
 CID="441023A549B648B39FDA947FE5A34803-8B"
 
 # Pretty colors :)
@@ -66,6 +67,10 @@ function show_param() {
   echo "  -s, --silent    Run the script with no output (Don't use with -y)"
   echo "  -y, --all-yes   Choose yes for everything (Don't use with -s)"
   echo ""
+}
+
+function service_exec() {
+	sudo /bin/systemctl status falcon-sensor.service > erros.log
 }
 
 error_log() {
@@ -132,13 +137,18 @@ done
 
 case "$DISTRO" in
 	"\"Ubuntu"\")
-		if [[ "$VERSION" =~ ^(16|18|20|22|23)$ ]]; then 	# =~ Not all Ubuntu versions are compatible, yikes!
-			echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY is compatible"
+		if [[ "$VERSION" =~ ^(16|18|20|22|23|24)$ ]] && [[ "$ARCH" =~ ^("aarch64"|"x86_64")$ ]]; then	# =~ Not all Ubuntu versions are compatible, yikes!
+			echo -e "${GREEN}[SUCCESS]${DEFAULT} | $PRETTY $ARCH is compatible"
 			OS="Ubuntu"
-			REPO="https://crowdstrike-installer-newest.s3-eu-west-1.amazonaws.com/latest/falcon-sensor_ubuntu_latest.deb"
-			FALCON="falcon-sensor_ubuntu_latest.deb"
+			if [ "$ARCH" = "aarch64" ]; then
+				REPO="https://crowdstrike-installer-newest.s3-eu-west-1.amazonaws.com/latest/falcon-sensor_ubuntu_arm64_latest.deb"
+				FALCON="falcon-sensor_ubuntu_arm64_latest.deb"
+			else
+				REPO="https://crowdstrike-installer-newest.s3-eu-west-1.amazonaws.com/latest/falcon-sensor_ubuntu_latest.deb"
+				FALCON="falcon-sensor_ubuntu_latest.deb"
+			fi
 		else
-			echo -e "\n${RED}[ERROR]${DEFAULT}   | Version $PRETTY is not compatible"
+			echo -e "\n${RED}[ERROR]${DEFAULT}   | Version $PRETTY $ARCH is not compatible"
 			exit
 		fi
 	;;
@@ -242,7 +252,7 @@ else
 		*)
 			case $OS in
 				"Ubuntu")
-					apt install /tmp/Repo/"$FALCON" -y 2> erros.log
+					apt update && apt install /tmp/Repo/"$FALCON" -y 2> erros.log
 				;;
 				"Amazon Linux"|"Fedora")
 					yum install /tmp/Repo/"$FALCON" -y 2> erros.log
@@ -299,15 +309,29 @@ if [ -s erros.log ]; then
     echo -e "\n${RED}[ERROR]${DEFAULT}   | Aborted Install"
     exit 1
 fi
-echo -e "${BLUE}[Running]${DEFAULT} | Waiting 15s to confirm server handshake..."
-sleep 15 # Increase this value if you have a really slow machine or poor connection
+echo -e "${BLUE}[Running]${DEFAULT} | Waiting 20s to confirm server handshake..."
 
 # Checking status
 
 SERVICE=$(sudo /bin/systemctl status falcon-sensor.service > erros.log)
 RFM=$($ctl -g --rfm-state)
-SENSOR=$(sudo /bin/systemctl status falcon-sensor.service | grep "ConnectToCloud successful")
+timeout=60
+start=$(date +%s)
 
+# Loop until the timeout is reached or the word is found
+while true; do
+	# Check if the timeout has been reached
+	now=$(date +%s)
+	elapsed=$((now - start))
+	if [[ $elapsed -ge $timeout ]]; then
+		error_log
+	fi
+	# Check for the word in the file
+	service_exec
+	if (grep -q "ConnectToCloud successful" erros.log); then
+		break
+	fi
+done
 case $? in
 	"0")
 		case "$RFM" in
@@ -318,18 +342,6 @@ case $? in
 			;;
 		esac
 		echo -e "\n${GREEN}[SUCCESS]${DEFAULT} | Falcon service started successfully"	
-	;;
-	*)
-		eval $SERVICE
-		read -p $'\e[31m[ERROR]\e[0m   | Something went wrong, wanna check erros.log? [y/N]: ' input
-		case "$input" in
-			[yY])
-				cat erros.log
-		;;
-		esac
-		echo -e "\n${RED}[ERROR]${DEFAULT}   | Fix the issue before using this script again"
-    	echo -e "${RED}[ERROR]${DEFAULT}   | Aborted Install"
-		exit 1
 	;;
 esac
 echo -e "\n${YELLOW}[Warning]${DEFAULT} | Check this hostname ($maq_hostname) on CrowdStrike Console"
