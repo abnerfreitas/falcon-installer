@@ -48,7 +48,7 @@ DISTRO=$(grep '^NAME' /etc/os-release | cut -c 6-100)
 VERSION=$(grep '^VERSION=' /etc/os-release | cut -c 10-11)
 PRETTY=$(grep '^PRETTY_NAME' /etc/os-release | cut -c 13-100)
 ARCH=$(uname -m)
-CID="441023A549B648B39FDA947FE5A34803-8B"
+CID=""
 
 # Pretty colors :)
 RED="\e[31m"
@@ -69,7 +69,7 @@ function show_param() {
   echo ""
 }
 
-function service_exec() {
+function service_stats() {
 	sudo /bin/systemctl status falcon-sensor.service > erros.log
 }
 
@@ -309,7 +309,7 @@ if [ -s erros.log ]; then
     echo -e "\n${RED}[ERROR]${DEFAULT}   | Aborted Install"
     exit 1
 fi
-echo -e "${BLUE}[Running]${DEFAULT} | Waiting 20s to confirm server handshake..."
+echo -e "${BLUE}[Running]${DEFAULT} | Confirming cloud handshake. Please wait..."
 
 # Checking status
 
@@ -318,16 +318,15 @@ RFM=$($ctl -g --rfm-state)
 timeout=60
 start=$(date +%s)
 
-# Loop until the timeout is reached or the word is found
+# Loop until the timeout is reached or the handshake is acknowledge
 while true; do
-	# Check if the timeout has been reached
 	now=$(date +%s)
 	elapsed=$((now - start))
 	if [[ $elapsed -ge $timeout ]]; then
 		error_log
 	fi
 	# Check for the word in the file
-	service_exec
+	service_stats
 	if (grep -q "ConnectToCloud successful" erros.log); then
 		break
 	fi
